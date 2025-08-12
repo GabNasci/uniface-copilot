@@ -1,16 +1,35 @@
-# This is a sample Python script.
+import streamlit as st
+import ollama
 
-# Press Ctrl+F5 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+st.set_page_config(page_title="Chat com DeepSeek", page_icon="🤖", layout="centered")
 
+st.title("💬 Chat com DeepSeek via Ollama")
+st.write("Converse com o modelo **DeepSeek** rodando localmente.")
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press F9 to toggle the breakpoint.
+# Área de histórico
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
+# Exibir histórico
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+# Campo de entrada
+if prompt := st.chat_input("Digite sua mensagem..."):
+    # Adicionar mensagem do usuário ao histórico
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    # Resposta do modelo
+    with st.chat_message("assistant"):
+        response = ollama.chat(model="deepseek-r1", messages=[
+            {"role": "system", "content": "Você é um assistente útil."},
+            *st.session_state.messages
+        ])
+        msg = response['message']['content']
+        st.markdown(msg)
+
+    # Adicionar resposta ao histórico
+    st.session_state.messages.append({"role": "assistant", "content": msg})
